@@ -1,33 +1,35 @@
 import numpy as np
+from time import time
+import cv2 as cv
+from progress.bar import Bar  
 
-import cv2
-  
+def compute_rate(n):
+    bar = Bar('Computing frame rate', max = n)
+    vid = cv.VideoCapture('nvarguscamerasrc ! video/x-raw(memory:NVMM), width=640, height=480, format=(string)NV12, framerate=(fraction)20/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink' , cv.CAP_GSTREAMER)
+    rates = list()
+    i = 0
+    #Check if camera was opened correctly
+    if not (vid.isOpened()):
+        print("Could not open video device")
+    
+    while(True):
+        t1 = time()
+        bar.next()
+        _, frame = vid.read()
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        cv.imshow('frame', gray)
+        t2 = time()
+        rates.append(t2-t1)
+        i+=1
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+        elif i>n-1:
+            break
+    bar.finish()
+    vid.release()
+    cv.destroyAllWindows()
+    return np.mean(rates)
 
-# define a video capture object
-vid = cv2.VideoCapture(0)
-  
-while(True):
-    _, frame = vid.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    '''
-    dst = cv2.cornerHarris(gray,2,3,0.04)
-    dst = cv2.dilate(dst,None)
-    gray[dst>0.01*dst.max()]=255
-    '''
-
-    '''
-    corners = cv2.goodFeaturesToTrack(gray,25,0.01,10)
-    for i in corners:
-        x,y = i.ravel()
-        cv2.circle(gray,(x,y),3,255,-1)
-    '''
-    sift = cv2.SIFT_create()
-    kp = sift.detect(gray,None)
-    img = cv2.drawKeypoints(gray,kp,frame,flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imshow('frame', img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-  
-vid.release()
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+   rate = compute_rate(100)
+   print(rate)
