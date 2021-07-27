@@ -13,7 +13,8 @@ def corners():
     # Arrays to store object points and image points from all the images.
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
-    for i in range(14):
+    for i in range(10):
+        print(i)
         name  = path + '/foto_' + str(i) + '.png'
         img = cv.imread(name)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -26,8 +27,8 @@ def corners():
             imgpoints.append(corners)
             # Draw and display the corners
             cv.drawChessboardCorners(img, (6,9), corners2, ret)
-            #cv.imshow(name, img)
-            #cv.waitKey(500)
+            cv.imshow('frame', img)
+            cv.waitKey(1000)
     return objpoints,imgpoints,gray
         
 def save_dic(dic):

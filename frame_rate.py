@@ -3,7 +3,7 @@ from time import time
 import cv2 as cv
 from progress.bar import Bar  
 
-def compute_rate(n):
+def compute_rate(n=1000000):
     bar = Bar('Computing frame rate', max = n)
     vid = cv.VideoCapture('nvarguscamerasrc ! video/x-raw(memory:NVMM), width=640, height=480, format=(string)NV12, framerate=(fraction)20/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink' , cv.CAP_GSTREAMER)
     rates = list()
@@ -31,5 +31,5 @@ def compute_rate(n):
     return np.mean(rates)
 
 if __name__ == '__main__':
-   rate = compute_rate(100)
+   rate = compute_rate()
    print(rate)
