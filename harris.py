@@ -4,6 +4,14 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from time import time
 from progress.bar import Bar
+import json
+f = open('dic_of_calibration.json','r')
+data = json.load(f)
+mtx = np.array(data['mtx'])
+dist = np.array(data['dist'])
+
+
+
 orb = cv.ORB_create()
 bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
 img1 = cv.imread('akira.png',cv.IMREAD_GRAYSCALE)
@@ -11,6 +19,11 @@ dst = cv.cornerHarris(img1,2,3,0.04)
 img1[dst>0.01*dst.max()]=255
 kp1, des1 = orb.detectAndCompute(img1,None)
 vid = cv.VideoCapture('nvarguscamerasrc ! video/x-raw(memory:NVMM), width=640, height=480, format=(string)NV12, framerate=(fraction)20/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink' , cv.CAP_GSTREAMER)
+_, image = vid.read()
+h,  w = image.shape[:2]
+newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+
 
 def compute_rate(n):
     bar = Bar('Computing frame rate...', max = n)
@@ -21,6 +34,9 @@ def compute_rate(n):
         t1 = time()
         _, frame = vid.read()
         img2 = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        img2 = cv.remap(img2, mapx, mapy, cv.INTER_LINEAR)
+        x, y, w, h = roi
+        img2 = img2[y:y+h, x:x+w]
         dst = cv.cornerHarris(img2,2,3,0.04)
         img2[dst>0.01*dst.max()]=255
         kp2, des2 = orb.detectAndCompute(img2,None)
@@ -42,4 +58,4 @@ def compute_rate(n):
     bar.finish()
     return rates
 if __name__ == '__main__':
-    rate = compute_rate(1000)
+    rate = compute_rate(500)
