@@ -4,13 +4,32 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from time import time
 from progress.bar import Bar
+
+def harris(img):
+    '''
+    Harris detector
+    :param img: an color image
+    :return: keypoint, image with feature marked corner
+    '''
+    img = np.float32(img)
+    dst = cv.cornerHarris(img, 2, 3, 0.04)
+
+    # for each dst larger than threshold, make a keypoint out of it
+    keypoints = np.argwhere(dst > 0.01 * dst.max())
+    keypoints = [cv.KeyPoint(float(x[1]), float(x[0]), 1) for x in keypoints]
+
+    return keypoints
+
 orb = cv.ORB_create()
 bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
 img1 = cv.imread('akira.png',cv.IMREAD_GRAYSCALE)
-dst = cv.cornerHarris(img1,2,3,0.04)
-img1[dst>0.01*dst.max()]=255
-kp1, des1 = orb.detectAndCompute(img1,None)
-vid = cv.VideoCapture('nvarguscamerasrc ! video/x-raw(memory:NVMM), width=640, height=480, format=(string)NV12, framerate=(fraction)20/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink' , cv.CAP_GSTREAMER)
+kp1 = harris(img1)
+
+kp1, des1 = orb.compute(img1, kp1)
+
+vid = cv.VideoCapture(0)
+
+
 
 def compute_rate(n):
     bar = Bar('Computing frame rate...', max = n)
@@ -21,9 +40,8 @@ def compute_rate(n):
         t1 = time()
         _, frame = vid.read()
         img2 = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        dst = cv.cornerHarris(img2,2,3,0.04)
-        img2[dst>0.01*dst.max()]=255
-        kp2, des2 = orb.detectAndCompute(img2,None)
+        kp2 = harris(img2)
+        kp2, des2 = orb.compute(img2, kp2)
         matches = bf.match(des1,des2)
         matches = sorted(matches, key = lambda x:x.distance)
         img3 = cv.drawMatches(img1,kp1,img2,kp2,matches[:30],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
