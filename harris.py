@@ -1,7 +1,7 @@
 
 import numpy as np
 import cv2 as cv
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from time import time
 from progress.bar import Bar
 import json 

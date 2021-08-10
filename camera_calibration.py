@@ -13,7 +13,7 @@ def corners():
     # Arrays to store object points and image points from all the images.
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
-    for i in range(10):
+    for i in range(9):
         print(i)
         name  = path + '/foto_' + str(i) + '.png'
         img = cv.imread(name)
